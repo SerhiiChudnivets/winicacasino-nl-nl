@@ -2,4 +2,4 @@ User-agent: *
 Disallow: /trackback/
 Disallow: /play/*
 
-Sitemap: https://rarawincasino-uk.uk/sitemap.xml
+Sitemap: https://winicacasino-nl.nl/sitemap.xml
