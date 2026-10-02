@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /trackback/
+Disallow: /play/*
+
+Sitemap: https://rarawincasino-uk.uk/sitemap.xml
