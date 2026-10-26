@@ -103,6 +103,7 @@ interface CasinoData {
   secondary_background?: string
   button_background?: string
   button_text?: string
+  button_text_color?: string
   text_color?: string
   color_highlight_text?: string
   color_main_btn_text?: string
@@ -112,7 +113,9 @@ interface CasinoData {
   
   // Repeatable components
   Slots?: Slot[]
+  slots?: Slot[]
   Bonuses?: Bonus[]
+  bonuses?: Bonus[]
   header_menu?: MenuItem[]
   footer_menu?: MenuItem[]
   footer_images?: FooterImage[]
@@ -233,7 +236,7 @@ const styles = `
 
   .btn-primary {
     background: var(--button-bg);
-    color: var(--primary-foreground);
+    color: var(--button-text-color);
   }
 
   .btn-primary:hover {
@@ -1276,6 +1279,7 @@ export default function TupchiyTemplate() {
   const buttonBackground = data.button_background || '#f59e0b' // default amber
   const ctaBackground = data.cta_background || buttonBackground
   const buttonText = data.button_text || '#1a202c' // default dark
+  const buttonTextColor = data.button_text_color || data.button_text || '#1a202c'
   const textColor = data.text_color || '#f7fafc' // default light
   const colorHighlightText = data.color_highlight_text || '#f59e0b'
   const colorMainBtnText = data.color_main_btn_text || 'fff'
@@ -1343,14 +1347,20 @@ export default function TupchiyTemplate() {
       --button-bg: ${buttonBackground};
       --cta-bg: ${ctaBackground};
       --button-text: ${buttonText};
+      --button-text-color: ${buttonTextColor};
       --color-main-btn: ${colorMainBtnText};
     }
   `;
 
   // Mock slots data if not provided
-  const slots = data.Slots && data.Slots.length > 0 ? data.Slots : []
+  const slots = Array.isArray(data.Slots) && data.Slots.length > 0
+      ? data.Slots
+      : Array.isArray(data.slots) ? data.slots : []
 
-  const bonuses = data.Bonuses && data.Bonuses.length > 0 ? data.Bonuses : []
+  const dataBonusFallbacks = Array.isArray(data.bonuses) ? data.bonuses : []
+  const bonuses = Array.isArray(data.Bonuses) && data.Bonuses.length > 0
+      ? data.Bonuses
+      : dataBonusFallbacks
 
   useEffect(() => {
     const handleScroll = () => {
@@ -1402,6 +1412,12 @@ export default function TupchiyTemplate() {
     if (typeof media === 'string') return fallback
     if (Array.isArray(media)) return getMediaAlt(media[0], fallback)
     return media.alt || media.alternativeText || media.name || fallback
+  }
+
+  const getSlotDisplayName = (slot: Slot, fallbackIndex: number) => {
+    const rawName = slot.logo_alt || slot.Name || slot.name || `Slot ${fallbackIndex + 1}`
+    const trimmedName = rawName.trim()
+    return trimmedName ? `${trimmedName.charAt(0).toUpperCase()}${trimmedName.slice(1)}` : `Slot ${fallbackIndex + 1}`
   }
   const footerImages = (Array.isArray(data.footer_images) ? data.footer_images : data.footerImages || [])
       .map((item, index) => ({
@@ -1619,11 +1635,13 @@ export default function TupchiyTemplate() {
 
                   <div className="slots-grid">
                     {slots.slice(slotStartIndex, slotStartIndex + visibleSlots).map((slot, index) => {
+                      const slotIndex = slotStartIndex + index
                       const logoUrl = getLogoUrl(slot)
+                      const slotName = getSlotDisplayName(slot, slotIndex)
                       return (
                           <div key={slot.id || index} className="slot-card">
                             {logoUrl ? (
-                                <img src={logoUrl} alt={slot.logo_alt || getMediaAlt(slot.logo, slot.Name || slot.name || `Slot ${index + 1}`)} className="slot-image" />
+                                <img src={logoUrl} alt={slot.logo_alt || getMediaAlt(slot.logo, slotName)} className="slot-image" />
                             ) : (
                                 <div className="slot-image" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem' }}>
                                   🎰
@@ -1631,7 +1649,7 @@ export default function TupchiyTemplate() {
                             )}
                             <div className="slot-overlay">
                               <div className="slot-background">
-                                <span className="slot-name">{slot.Name || `Slot ${index + 1}`}</span>
+                                <span className="slot-name">{slotName}</span>
                                 <button className="btn btn-primary" onClick={() => slot.link && (window.location.href = slot.link)}>
                                   Play
                                 </button>
@@ -1678,7 +1696,10 @@ export default function TupchiyTemplate() {
 
               <div className="bonuses-grid">
                 {bonuses.slice(bonusStartIndex, bonusStartIndex + visibleBonuses).map((bonus, index) => {
+                  const bonusIndex = bonusStartIndex + index
+                  const fallbackBonus = dataBonusFallbacks[bonusIndex]
                   const bonusLogo = getMediaUrl(bonus.logo)
+                  const bonusName = bonus.Name || bonus.name || fallbackBonus?.Name || fallbackBonus?.name || `Bonus ${bonusIndex + 1}`
 
                   return (
                       <div key={bonus.id || index} className="bonus-card">
@@ -1686,7 +1707,7 @@ export default function TupchiyTemplate() {
                           {bonusLogo ? (
                               <img
                                   src={bonusLogo}
-                                  alt={bonus.logo_alt || getMediaAlt(bonus.logo, bonus.Name || bonus.name || `Bonus ${index + 1}`)}
+                                  alt={bonus.logo_alt || getMediaAlt(bonus.logo, bonusName)}
 
                               />
                           ) : (
@@ -1697,7 +1718,7 @@ export default function TupchiyTemplate() {
                         </div>
 
                         <div className="bonus-content">
-                          <h3 className="bonus-name">{bonus.Name || `Bonus ${index + 1}`}</h3>
+                          <h3 className="bonus-name">{bonusName}</h3>
 
                           <button
                               className="btn btn-primary"
